@@ -35,7 +35,7 @@ public class S3Contoller {
 		response.put("publicURL", publicURL);
 		return new ResponseEntity<Map<String, String>>(response, HttpStatus.CREATED);
 	}
-
+   //download
     @GetMapping("download/{filename}")
     public ResponseEntity<byte[]> download(@PathVariable("filename") String filename){
         HttpHeaders headers=new HttpHeaders();
