@@ -27,7 +27,7 @@ public class S3Contoller {
 //    public String upload(@RequestParam("file") MultipartFile file){
 //       return s3Service.saveFile(file);
 //    }
-    
+    // upload
     @PostMapping("/upload")
 	public ResponseEntity<Map<String, String>> uploadFile(@RequestParam("file") MultipartFile file) {
 		String publicURL =  s3Service.uploadFile(file);
