@@ -1,5 +1,6 @@
 package com.example.springs3demo.controller;
 
+import com.example.springs3demo.model.ContentDetails;
 import com.example.springs3demo.service.S3Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -14,27 +15,37 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import static java.net.HttpURLConnection.HTTP_OK;
 
 @RestController
 public class S3Contoller {
+	
+	ObjectMapper objectMapper=new ObjectMapper();
 
 
-    @Autowired
-    private S3Service s3Service;;
+	@Autowired
+    private S3Service s3Service;
+
 //
 //    @PostMapping("/upload")
 //    public String upload(@RequestParam("file") MultipartFile file){
 //       return s3Service.saveFile(file);
 //    }
-    // upload
-    @PostMapping("/upload")
-	public ResponseEntity<Map<String, String>> uploadFile(@RequestParam("file") MultipartFile file) {
-		String publicURL =  s3Service.uploadFile(file);
-		Map<String, String> response = new HashMap<>();
-		response.put("publicURL", publicURL);
-		return new ResponseEntity<Map<String, String>>(response, HttpStatus.CREATED);
-	}
+
+
+	@RequestMapping(value="/upload", method=RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Map<String, String>> uploadFile(@RequestParam(required=true,value="json") String jsondata,@RequestParam(required=true,value="file") MultipartFile file) throws JsonMappingException, JsonProcessingException {
+
+		ContentDetails contentdetails=objectMapper.readValue(jsondata, ContentDetails.class);
+        String publicURL =  s3Service.uploadFile(file,contentdetails);
+        Map<String, String> response = new HashMap<>();
+        response.put("publicURL", publicURL);
+        return new ResponseEntity<Map<String, String>>(response, HttpStatus.CREATED);
+    }
    //download
     @GetMapping("download/{filename}")
     public ResponseEntity<byte[]> download(@PathVariable("filename") String filename){

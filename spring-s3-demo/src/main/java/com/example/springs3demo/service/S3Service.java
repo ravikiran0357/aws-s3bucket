@@ -24,19 +24,25 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.util.IOUtils;
+import com.example.springs3demo.model.ContentDetails;
+import com.example.springs3demo.repo.Contentrepo;
 
 @Service
 public class S3Service implements FileServiceImpl{
 
-    @Value("${bucketName}")
+	@Value("${bucketName}")
     private String bucketName;
 
     private  final AmazonS3 s3;
 
     @Autowired
     private AmazonS3Client awsS3Client;
-    
-    
+
+    @Autowired
+    private Contentrepo crepo;
+
+
+
     public S3Service(AmazonS3 s3) {
         this.s3 = s3;
     }
@@ -53,31 +59,33 @@ public class S3Service implements FileServiceImpl{
 //        }
 //
 //    }
-    
-    
 
-	@Override
-	public String uploadFile(MultipartFile file) {
-		
-		String filenameExtension = StringUtils.getFilenameExtension(file.getOriginalFilename());
-		
-		String key = UUID.randomUUID().toString() + "." +filenameExtension;
-		
-		ObjectMetadata metaData = new ObjectMetadata();
-		metaData.setContentLength(file.getSize());
-		metaData.setContentType(file.getContentType());
-		
-		try {
-			awsS3Client.putObject("doctorite-ai-apis-dev-serverlessdeploymentbucket-hqaepdhdfb0l", key, file.getInputStream(), metaData);
-		} catch (IOException e) {
-			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An exception occured while uploading the file");
-		}
-		
-		awsS3Client.setObjectAcl("doctorite-ai-apis-dev-serverlessdeploymentbucket-hqaepdhdfb0l", key, CannedAccessControlList.PublicRead);
-		
-		return awsS3Client.getResourceUrl("doctorite-ai-apis-dev-serverlessdeploymentbucket-hqaepdhdfb0l", key);
-	}
-	
+
+    @Override
+    public String uploadFile(MultipartFile file,ContentDetails contentdetails) {
+
+        String filenameExtension = StringUtils.getFilenameExtension(file.getOriginalFilename());
+
+        String key = UUID.randomUUID().toString() + "." +filenameExtension;
+
+        ObjectMetadata metaData = new ObjectMetadata();
+        metaData.setContentLength(file.getSize());
+        metaData.setContentType(file.getContentType());
+
+        try {
+            awsS3Client.putObject("elasticbeanstalk-us-west-2-543506286953", key, file.getInputStream(), metaData);
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An exception occured while uploading the file");
+        }
+
+        awsS3Client.setObjectAcl("elasticbeanstalk-us-west-2-543506286953", key, CannedAccessControlList.PublicRead);
+
+        //return awsS3Client.getResourceUrl("elasticbeanstalk-us-west-2-543506286953", key);
+        String url=awsS3Client.getResourceUrl("elasticbeanstalk-us-west-2-543506286953", key);
+        contentdetails.setUrl(url);
+        crepo.save(contentdetails);
+        return "sucessed";
+    }
 
     @Override
     public byte[] downloadFile(String filename) {
