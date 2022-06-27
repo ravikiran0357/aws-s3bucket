@@ -73,15 +73,15 @@ public class S3Service implements FileServiceImpl{
         metaData.setContentType(file.getContentType());
 
         try {
-            awsS3Client.putObject("elasticbeanstalk-us-west-2-543506286953", key, file.getInputStream(), metaData);
+            awsS3Client.putObject(bucketName, key, file.getInputStream(), metaData);
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An exception occured while uploading the file");
         }
 
-        awsS3Client.setObjectAcl("elasticbeanstalk-us-west-2-543506286953", key, CannedAccessControlList.PublicRead);
+        awsS3Client.setObjectAcl(bucketName, key, CannedAccessControlList.PublicRead);
 
         //return awsS3Client.getResourceUrl("elasticbeanstalk-us-west-2-543506286953", key);
-        String url=awsS3Client.getResourceUrl("elasticbeanstalk-us-west-2-543506286953", key);
+        String url=awsS3Client.getResourceUrl(bucketName, key);
         contentdetails.setUrl(url);
         crepo.save(contentdetails);
         return "sucessed";
