@@ -3,6 +3,7 @@ package com.example.springs3demo.service;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -15,10 +16,19 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.amazonaws.AmazonServiceException;
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.AmazonS3Exception;
+import com.amazonaws.services.s3.model.Bucket;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.ListObjectsV2Result;
+import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
@@ -30,10 +40,16 @@ import com.example.springs3demo.repo.Contentrepo;
 @Service
 public class S3Service implements FileServiceImpl{
 
-	@Value("${bucketName}")
+	//@Value("${bucketName}")
     private String bucketName;
+	
+	//@Value("${accessKey}")
+	private String accessKey="AKIAX5C37ZFUTAR7C2G";
+	
+    //@Value("${secret}")
+	private String secret="5OzRu8+kHbIPQjtNcrHhUdiGST1tF0jhtHf6V4+1";
 
-    private  final AmazonS3 s3;
+    public  final AmazonS3 s3;
 
     @Autowired
     private AmazonS3Client awsS3Client;
@@ -41,11 +57,74 @@ public class S3Service implements FileServiceImpl{
     @Autowired
     private Contentrepo crepo;
 
+    String bucketNames = "selfhelp-bucket";
 
 
     public S3Service(AmazonS3 s3) {
         this.s3 = s3;
     }
+    // creating bucket 
+    AWSCredentials credentials = new BasicAWSCredentials(
+//    		"AKIAX5C37ZFUTAR7C2G7", 
+//    		"5OzRu8+kHbIPQjtNcrHhUdiGST1tF0jhtHf6V4+1"
+    		accessKey,secret
+    		);
+    
+    AmazonS3 s3client = AmazonS3ClientBuilder
+    		  .standard()
+    		  .withCredentials(new AWSStaticCredentialsProvider(credentials))
+    		  .withRegion(Regions.US_EAST_2)
+    		  .build();
+    //create bucket
+    @Override
+    public String createBucket(String buckettName) {
+        if (s3.doesBucketExistV2(buckettName)) {
+            return "already bucket created!!!"+buckettName;
+            //b = getBucket(buckettName);
+        } else {
+            try {
+                s3.createBucket(buckettName);
+                return "bucket created successfully";
+            } catch (AmazonS3Exception e) {
+                System.err.println(e.getErrorMessage());
+                return e.getErrorMessage();
+            }
+
+        }	
+     }
+     //list of buckets
+     @Override
+     public List<Bucket> listBuckets() {
+         List<Bucket> buckets = s3.listBuckets();
+         System.out.println("Your {S3} buckets are:");
+         for (Bucket b : buckets) {
+            // System.out.println("* " + b.getName());
+         }
+         return buckets;
+     }
+    //delete bucket
+     @Override
+     public String deleteBucket(String bucket_Name) {
+         System.out.println(" - removing objects from bucket");
+         ObjectListing object_listing = s3.listObjects(bucket_Name);
+         while (true) {
+             for (Iterator<?> iterator =
+                  object_listing.getObjectSummaries().iterator();
+                  iterator.hasNext(); ) {
+                 S3ObjectSummary summary = (S3ObjectSummary) iterator.next();
+                 s3.deleteObject(bucket_Name, summary.getKey());
+             }
+
+             // more object_listing to retrieve?
+             if (object_listing.isTruncated()) {
+                 object_listing = s3.listNextBatchOfObjects(object_listing);
+             } else {
+                 break;
+             }
+         }
+         return "deleted successfully";
+     }
+     
 
 //    @Override
 //    public String saveFile(MultipartFile file) {
@@ -124,4 +203,13 @@ public class S3Service implements FileServiceImpl{
         fos.close();
         return convFile;
     }
+
+	@Override
+	public List<ContentDetails> listAllFile() {
+		
+		return crepo.findAll();
+	}
+
+
+	
 }

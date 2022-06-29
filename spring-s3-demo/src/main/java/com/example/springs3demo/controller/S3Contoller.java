@@ -1,5 +1,6 @@
 package com.example.springs3demo.controller;
 
+import com.amazonaws.services.s3.model.Bucket;
 import com.example.springs3demo.model.ContentDetails;
 import com.example.springs3demo.service.S3Service;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +47,8 @@ public class S3Contoller {
         response.put("publicURL", publicURL);
         return new ResponseEntity<Map<String, String>>(response, HttpStatus.CREATED);
     }
-   //download
+   //download from bucket
+	//localhost:8080/download/ravi.png
     @GetMapping("download/{filename}")
     public ResponseEntity<byte[]> download(@PathVariable("filename") String filename){
         HttpHeaders headers=new HttpHeaders();
@@ -56,16 +58,40 @@ public class S3Contoller {
         return  ResponseEntity.status(HTTP_OK).headers(headers).body(bytes);
     }
 
-
+    //delete file from bucket
     @DeleteMapping("{filename}")
     public  String deleteFile(@PathVariable("filename") String filename){
        return s3Service.deleteFile(filename);
     }
-
+    //list of files in bucket
     @GetMapping("list")
     public List<String> getAllFiles(){
 
         return s3Service.listAllFiles();
+    }
+    //list from database
+    @GetMapping("listAll")
+    public List<ContentDetails> getAllFile(){
+
+        return s3Service.listAllFile();
 
     }
+    //creating bucket
+    @GetMapping("createBucket/{buckettName}")
+    public String createBucket(@PathVariable("buckettName") String buckettName) {
+
+        return s3Service.createBucket(buckettName);
+    }
+    //listing the buckets
+    @GetMapping("/listBuckets")
+    public List<Bucket> getAllBuckets(){
+
+        return s3Service.listBuckets();
+    }
+
+     @DeleteMapping("deleteBucket/{bucket_Name}")
+     public String deleteBucket(@PathVariable("bucket_Name") String bucket_Name) {
+            return s3Service.deleteBucket(bucket_Name);
+        }
+    
 }

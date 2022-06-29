@@ -27,7 +27,15 @@ public class ContentDetails {
         this.videoType = videoType;
         this.url = url;
     }
-    public String getLanguage() {
+    public ContentDetails(Integer id, String language, String videoType, String url) {
+		super();
+		this.id = id;
+		this.language = language;
+		this.videoType = videoType;
+		this.url = url;
+	}
+
+	public String getLanguage() {
         return language;
     }
     public void setLanguage(String language) {
