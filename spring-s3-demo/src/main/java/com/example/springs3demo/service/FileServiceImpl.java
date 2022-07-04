@@ -27,4 +27,15 @@ public interface FileServiceImpl {
     public String createBucket(String buckettName);
     public String deleteBucket(String bucket_Name);
     public List<Bucket> listBuckets();
+    
+    //acl
+    public String getBucketAcl(String bucket_name);
+    public String setBucketAcl(String bucket_name, String email, String access);
+    //objects acl
+    public String getObjectAcl(String bucket_name, String object_key);
+    public String setObjectAcl(String bucket_name, String object_key, String email, String access);
+    //policy
+    public String setBucketPolicy(String bucket_name, String policy_text);
+    public String getBucketPolicy(String bucket_name);
+    public String deleteBucketPolicy(String bucket_name);
 }

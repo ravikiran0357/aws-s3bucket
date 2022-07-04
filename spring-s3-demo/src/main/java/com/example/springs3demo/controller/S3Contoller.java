@@ -88,10 +88,53 @@ public class S3Contoller {
 
         return s3Service.listBuckets();
     }
-
+    // delete the bucket
      @DeleteMapping("deleteBucket/{bucket_Name}")
      public String deleteBucket(@PathVariable("bucket_Name") String bucket_Name) {
             return s3Service.deleteBucket(bucket_Name);
-        }
+      }
+     
+     //getAcl
+     @GetMapping("getAcl/{bucket_Name}")
+     public String getBucketAcl(@PathVariable("bucket_Name") String bucket_Name)
+     {
+    	 return s3Service.getBucketAcl(bucket_Name);
+     }
+     //setAcl
+     @GetMapping("setAcl")
+     public String setBucketAcl(@RequestParam("bucket_Name") String bucket_Name,@RequestParam("email")String email,@RequestParam("access")String access)
+     {
+    	 return s3Service.setBucketAcl(bucket_Name,email,access);
+     }
+     //getObjectAcl
+     @GetMapping("getObjectAcl")
+     public String getObjectAcl(@RequestParam("bucket_Name")String bucket_Name,@RequestParam("object_key") String object_key)
+     {
+    	 return s3Service.getObjectAcl(bucket_Name, object_key);
+     }
+     //setObjectAcl
+     @GetMapping("setObjectAcl")
+     public String setObjectAcl(@RequestParam("bucket_Name")String bucket_Name,@RequestParam("object_key") String object_key, @RequestParam("email")String email,@RequestParam("access")String access)
+     {
+    	 return s3Service.setObjectAcl(bucket_Name, object_key, email, access); 
+     }
+     //setPolicy
+     @GetMapping("setBucketPolicy")
+     public String setBucketPolicy(@RequestParam("bucket_Name")String bucket_Name, @RequestParam("policy_text") String policy_text)
+     {
+    	 return s3Service.setBucketPolicy(bucket_Name, policy_text);
+     }
+     //getBucketPolicy
+     @GetMapping("getBucketPolicy")
+     public String getBucketPolicy(@RequestParam("bucket_Name") String bucket_Name)
+     {
+    	 return s3Service.getBucketPolicy(bucket_Name);
+     }
+     //deletepolicy
+     @DeleteMapping("deleteBucketPolicy")
+     public String deleteBucketPolicy(@RequestParam("bucket_Name") String bucket_Name)
+     {
+    	 return s3Service.deleteBucketPolicy(bucket_Name);
+     }
     
 }

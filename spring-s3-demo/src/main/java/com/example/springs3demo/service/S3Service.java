@@ -24,12 +24,17 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.AccessControlList;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.Bucket;
+import com.amazonaws.services.s3.model.BucketPolicy;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
+import com.amazonaws.services.s3.model.EmailAddressGrantee;
+import com.amazonaws.services.s3.model.Grant;
 import com.amazonaws.services.s3.model.ListObjectsV2Result;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.Permission;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
@@ -44,7 +49,7 @@ public class S3Service implements FileServiceImpl{
     private String bucketName;
 	
 	//@Value("${accessKey}")
-	private String accessKey="AKIAX5C37ZFUTAR7C2G";
+	private String accessKey="AKIAUIEW6RD5FE3VDP7D";
 	
     //@Value("${secret}")
 	private String secret="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";
@@ -73,7 +78,7 @@ public class S3Service implements FileServiceImpl{
     AmazonS3 s3client = AmazonS3ClientBuilder
     		  .standard()
     		  .withCredentials(new AWSStaticCredentialsProvider(credentials))
-    		  .withRegion(Regions.US_EAST_2)
+    		  .withRegion(Regions.AP_SOUTH_1)
     		  .build();
     //create bucket
     @Override
@@ -84,7 +89,7 @@ public class S3Service implements FileServiceImpl{
         } else {
             try {
                 s3.createBucket(buckettName);
-                return "bucket created successfully";
+                return "bucket cbucket_namereated successfully";
             } catch (AmazonS3Exception e) {
                 System.err.println(e.getErrorMessage());
                 return e.getErrorMessage();
@@ -164,7 +169,7 @@ public class S3Service implements FileServiceImpl{
         contentdetails.setUrl(url);
         crepo.save(contentdetails);
         return "sucessed";
-    }
+    }		// TODO Auto-generated method stub
 
     @Override
     public byte[] downloadFile(String filename) {
@@ -209,6 +214,154 @@ public class S3Service implements FileServiceImpl{
 		
 		return crepo.findAll();
 	}
+	
+	
+	
+	//acl
+	@Override
+	public String getBucketAcl(String bucket_name) {
+		 System.out.println("Retrieving ACL for bucket: " + bucket_name);
+
+	        final AmazonS3 s3 = AmazonS3ClientBuilder.standard().withRegion(Regions.AP_SOUTH_1).build();
+	        try {
+	            AccessControlList acl = s3.getBucketAcl(bucket_name);
+	            List<Grant> grants = acl.getGrantsAsList();
+	            for (Grant grant : grants) {
+	                System.out.format("  %s: %s\n", grant.getGrantee().getIdentifier(),
+	                        grant.getPermission().toString());
+	                
+	                return "Retrieving ACL for bucket: " + bucket_name+"\n Bucket owner (your AWS account)\n" + 
+	                		"\n" + 
+	                		"Canonical ID: "+" "+ grant.getGrantee().getIdentifier()+" "+
+	                        grant.getPermission().toString();
+	            }
+	        } catch (AmazonServiceException e) {
+	            System.err.println(e.getErrorMessage());
+	            return e.getErrorMessage();
+	        }
+		return "Retrieving ACL for bucket: " + bucket_name;
+	}
+	@Override
+	public String setBucketAcl(String bucket_name, String email, String access) {
+		    System.out.format("Setting %s access for %s\n", access, email);
+	        System.out.println("on bucket: " + bucket_name);
+
+	        final AmazonS3 s3 = AmazonS3ClientBuilder.standard().withRegion(Regions.AP_SOUTH_1).build();
+	        try {
+	            // get the current ACL
+	            AccessControlList acl = s3.getBucketAcl(bucket_name);
+	            // set access for the grantee
+	            EmailAddressGrantee grantee = new EmailAddressGrantee(email);
+	            Permission permission = Permission.valueOf(access);
+	            acl.grantPermission(grantee, permission);
+	            s3.setBucketAcl(bucket_name, acl);
+	            return  "created successfully bucketAcl";
+	        } catch (AmazonServiceException e) {
+	            System.err.println(e.getErrorMessage());
+	            return e.getErrorMessage();
+	        }
+		
+	}
+	//object acl
+	@Override
+	public String getObjectAcl(String bucket_name, String object_key) {
+		 System.out.println("Retrieving ACL for object: " + object_key);
+	        System.out.println("                in bucket: " + bucket_name);
+
+	        final AmazonS3 s3 = AmazonS3ClientBuilder.standard().withRegion(Regions.AP_SOUTH_1).build();
+	        try {
+	            AccessControlList acl = s3.getObjectAcl(bucket_name, object_key);
+	            List<Grant> grants = acl.getGrantsAsList();
+	            for (Grant grant : grants) {
+	                System.out.format("  %s: %s\n", grant.getGrantee().getIdentifier(),
+	                        grant.getPermission().toString());
+	                return "Retrieving ACL for bucket: " + object_key+"\n Bucket owner (your AWS account)\n" + 
+            		"\n" + 
+            		"Canonical ID: "+" "+ grant.getGrantee().getIdentifier()+" "+
+                    grant.getPermission().toString();
+	            }
+	        } catch (AmazonServiceException e) {
+	            System.err.println(e.getErrorMessage());
+	            return e.getErrorMessage();
+	        }
+	        return null;
+		
+	}
+	@Override
+	public String setObjectAcl(String bucket_name, String object_key, String email, String access) {
+		 System.out.format("Setting %s access for %s\n", access, email);
+	        System.out.println("for object: " + object_key);
+	        System.out.println(" in bucket: " + bucket_name);
+
+	        final AmazonS3 s3 = AmazonS3ClientBuilder.standard().withRegion(Regions.AP_SOUTH_1).build();
+	        try {
+	            // get the current ACL
+	            AccessControlList acl = s3.getObjectAcl(bucket_name, object_key);
+	            // set access for the grantee
+	            EmailAddressGrantee grantee = new EmailAddressGrantee(email);
+	            Permission permission = Permission.valueOf(access);
+	            acl.grantPermission(grantee, permission);
+	            s3.setObjectAcl(bucket_name, object_key, acl);
+	        } catch (AmazonServiceException e) {
+	            System.err.println(e.getErrorMessage());
+	            
+	        }
+		return null;
+	}
+	//policy
+	@Override
+	public String setBucketPolicy(String bucket_name, String policy_text) {
+	
+		  final AmazonS3 s3 = AmazonS3ClientBuilder.standard().withRegion(Regions.AP_SOUTH_1).build();
+	        try {
+	            s3.setBucketPolicy(bucket_name, policy_text);
+	            return "new bucket policy creted ";
+	        } catch (AmazonServiceException e) {
+	            System.err.println(e.getErrorMessage());
+	            return e.getErrorMessage();
+	        }
+	}
+	@Override
+	public String getBucketPolicy(String bucket_name) {
+	 String policy_text = null;
+        final AmazonS3 s3 = AmazonS3ClientBuilder.standard().withRegion(Regions.AP_SOUTH_1).build();
+        try {
+            BucketPolicy bucket_policy = s3.getBucketPolicy(bucket_name);
+            policy_text = bucket_policy.getPolicyText();
+            return policy_text;
+        } catch (AmazonServiceException e) {
+            System.err.println(e.getErrorMessage());
+            return e.getErrorMessage();
+     
+        }
+
+		/*
+		 * if (policy_text == null) {
+		 * System.out.println("The specified bucket has no bucket policy."); } else {
+		 * System.out.println("Returned policy:"); System.out.println("----");
+		 * System.out.println(policy_text); System.out.println("----\n"); }
+		 * 
+		 * System.out.println("Done!");
+		 */
+	}
+	@Override
+	public String deleteBucketPolicy(String bucket_name) {
+		
+	        String policy_text = null;
+
+	        System.out.format("Deleting policy from bucket: \"%s\"\n\n", bucket_name);
+
+	        final AmazonS3 s3 = AmazonS3ClientBuilder.standard().withRegion(Regions.AP_SOUTH_1).build();
+	        try {
+	            s3.deleteBucketPolicy(bucket_name);
+	            return "Deleting policy from bucket: "+bucket_name+"deleted succefully";
+	        } catch (AmazonServiceException e) {
+	            System.err.println(e.getErrorMessage());
+	            return e.getErrorMessage();
+	   
+	        }
+	}
+	
 
 
 	
